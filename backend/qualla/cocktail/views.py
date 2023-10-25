@@ -15,14 +15,10 @@ from rest_framework import permissions, authentication
 from .serializers import CocktailDetailSerializer, CocktailListSerializer, CocktailPostSerializer
 from .utils import color_similarity, order_queryset_by_id
 from django.db.models import Case, When
-from .admin import download_csv
-from django.contrib import admin
 
 
-def get_view(request):
-    data = download_csv( admin.ModelAdmin, request, Cocktail.objects.all())
 
-    return HttpResponse (data, content_type='text/csv')
+
 
 ## FILTER FUNCTIONS HERE ##
 

@@ -3,6 +3,8 @@ from django.db.models import CheckConstraint, Q
 from django.core.validators import RegexValidator
 
 
+
+    
 class Cocktail(models.Model):
     name = models.CharField(max_length=50, null=False, unique=True)
     image = models.CharField(max_length=500, null=False)
@@ -29,6 +31,7 @@ class Cocktail(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     rate = models.FloatField(default=0.0, null=False)
+
 
     class Meta:
         constraints = [

@@ -15,7 +15,7 @@ from rest_framework import permissions, authentication
 from .serializers import CocktailDetailSerializer, CocktailListSerializer, CocktailPostSerializer
 from .utils import color_similarity, order_queryset_by_id
 from django.db.models import Case, When
-from admin import download_csv
+from .admin import download_csv
 from django.contrib import admin
 
 

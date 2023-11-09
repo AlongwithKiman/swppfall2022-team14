@@ -1,15 +1,12 @@
-FROM python:3.10-slim-buster
+FROM python:3.10.0
 
-ENV PYTHONUNBUFFERED = 1
+RUN apt-get update && apt-get install -y python3-pip && apt-get clean
 
-RUN mkdir /app
 
-WORKDIR /app
+WORKDIR /qualla/
+ADD . /qualla/
+RUN python -m pip install --upgrade pip
+RUN pip3 install --no-cache-dir torch
 
-COPY requirements.txt /app/
-
-RUN pip install -r requirements.txt
-
-COPY . /app/
-
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+RUN pip3 install -r requirements.txt
+RUN python manage.py makemigrations

@@ -3,6 +3,7 @@ from .base import *
 DEBUG = False
 
 ALLOWED_HOSTS = ['tipsybackend.shop','qualla.kro.kr',\
+                 '3.39.189.88','ec2-3-39-189-88.ap-northeast-2.compute.amazonaws.com',
                  '13.209.77.169','ec2-13-209-77-169.ap-northeast-2.compute.amazonaws.com',\
                  '13.125.144.254','ec2-15-164-95-176.ap-northeast-2.compute.amazonaws.com', 'ec2-13-125-227-250.ap-northeast-2.compute.amazonaws.com','15.164.224.81','ec2-15-164-224-81.ap-northeast-2.compute.amazonaws.com']
 

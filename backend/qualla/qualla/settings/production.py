@@ -13,6 +13,8 @@ ALLOWED_HOSTS = ['0.0.0.0','web','tipsybackend.shop','qualla.kro.kr',\
 BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent.parent
 print(os.getcwd())
 print(os.path.join(os.getcwd(),'db.sqlite3'))
+print(BASE_DIR)
+print(BASE_DIR / '.db' / 'db.sqlite3')
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
@@ -20,9 +22,9 @@ print(os.path.join(os.getcwd(),'db.sqlite3'))
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        # 'NAME': BASE_DIR / '.db' / 'db.sqlite3',
+        'NAME': BASE_DIR / '.db' / 'db.sqlite3',
         # 'NAME': BASE_DIR / 'db.sqlite3',
-        'NAME': os.path.join(os.getcwd(),'db.sqlite3')
+        # 'NAME': os.path.join(os.getcwd(),'db.sqlite3')
                 
     }
 }

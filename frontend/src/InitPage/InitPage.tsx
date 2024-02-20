@@ -37,6 +37,7 @@ import AccountCircleIcon from "@mui/icons-material/AccountCircle";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import LocalBarIcon from "@mui/icons-material/LocalBar";
 import { useSearchParams } from "react-router-dom";
+import AIRecommendModal from "./Modals/AIRecommendModal";
 
 const StyledItem = styled(ListItemButton)({
   position: "relative",
@@ -82,9 +83,9 @@ const InitPage = () => {
 
   const navigate = useNavigate();
 
-  const [toggle, setToggle] = useState<"standard" | "custom" | "ingredient">(
-    "standard"
-  );
+  const [toggle, setToggle] = useState<
+    "standard" | "custom" | "ingredient" | "recommendation"
+  >("standard");
   const [isStandard, setIsStandard] = useState(
     searchParams.get("type") === "custom"
   );
@@ -136,8 +137,10 @@ const InitPage = () => {
       setToggle(toggle);
       setIsStandard(false);
       setSearchParams({ type: "custom" });
-    } else {
-      onClickRecommendButton();
+    } else if (toggle === "ingredient") {
+      onClickIngredientRecommendButton();
+    } else if (toggle === "recommendation") {
+      onClickAIRecommendButton();
     }
   };
 
@@ -145,10 +148,22 @@ const InitPage = () => {
     navigate(`/mypage`);
   };
 
-  const [isRecommendOpen, setIsRecommendOpen] = useState(false);
-  const onClickRecommendButton = () => {
+  const [isIngredientRecommendOpen, setIsIngredientRecommendOpen] =
+    useState(false);
+
+  const [isAIRecommendOpen, setIsAIRecommendOpen] = useState(false);
+
+  const onClickIngredientRecommendButton = () => {
     if (userState.isLogin) {
-      setIsRecommendOpen(true);
+      setIsIngredientRecommendOpen(true);
+    } else {
+      setIsLoginOpen(true);
+    }
+  };
+
+  const onClickAIRecommendButton = () => {
+    if (userState.isLogin) {
+      setIsAIRecommendOpen(true);
     } else {
       setIsLoginOpen(true);
     }
@@ -366,6 +381,9 @@ const InitPage = () => {
               <ToggleButton value="standard">스탠다드</ToggleButton>
               <ToggleButton value="custom">커스텀</ToggleButton>
               <ToggleButton value="ingredient">재료 추천</ToggleButton>
+              <ToggleButton value="recommendation">
+                AI에게 추천받기
+              </ToggleButton>
             </ToggleButtonGroup>
           </Stack>
         </Grid>
@@ -476,10 +494,16 @@ const InitPage = () => {
           />
         ) : null
       ) : null}
-      {isRecommendOpen ? (
+      {isIngredientRecommendOpen ? (
         <RecommendModal
-          isOpen={isRecommendOpen}
-          setIsOpen={setIsRecommendOpen}
+          isOpen={isIngredientRecommendOpen}
+          setIsOpen={setIsIngredientRecommendOpen}
+        />
+      ) : null}
+      {isAIRecommendOpen ? (
+        <AIRecommendModal
+          isOpen={isAIRecommendOpen}
+          setIsOpen={setIsAIRecommendOpen}
         />
       ) : null}
     </Stack>

@@ -1,7 +1,7 @@
-import { SetStateAction, Dispatch, useEffect, useState } from "react";
+import React, { useState } from "react";
+import { SetStateAction, Dispatch, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch } from "../../store";
-import React from "react";
 import {
   getRecommendIngredientList,
   selectIngredient,
@@ -48,9 +48,15 @@ const AIRecommendModal = (props: prop) => {
   const userState = useSelector(selectUser);
 
   const [cocktailFeel, setCocktailFeel] = useState<string>("");
+  const [showMessage, setShowMessage] = useState<boolean>(false);
+
   const handleAsk = () => {
     console.log("사용자가 입력한 칵테일 느낌:", cocktailFeel);
-    // TODO
+    setShowMessage(true);
+    setTimeout(() => {
+      setShowMessage(false);
+    }, 3000); // 3초 후에 메시지를 감춤
+    // TODO: 서버 요청 및 로직 추가
   };
 
   useEffect(() => {
@@ -72,6 +78,9 @@ const AIRecommendModal = (props: prop) => {
         <Button variant="contained" onClick={handleAsk}>
           AI에게 추천받기
         </Button>
+        {showMessage && (
+          <Typography textAlign="center">서버 재정비 후 돌아올게요!</Typography>
+        )}
       </Stack>
     </Modal>
   );

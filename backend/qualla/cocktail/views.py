@@ -373,7 +373,7 @@ from cocktail.cocktailbert.utils import postprocess_model
 
 tokenizer = KoBERTTokenizer.from_pretrained('skt/kobert-base-v1')
 #TODO: modify this root
-checkpoint_path = '/Users/yeonwoong/Desktop/portfolio/swppfall2022-team14/backend/qualla/cocktail/cocktailbert/model.ckpt'
+checkpoint_path = '/home/ubuntu/build/qualla/cocktail/cocktailbert/model.ckpt'
 loaded_ckpt = torch.load(checkpoint_path)
 loaded_model={}
 for key, value in loaded_ckpt.items():

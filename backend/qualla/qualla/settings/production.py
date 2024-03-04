@@ -22,7 +22,10 @@ print(BASE_DIR / '.db' / 'db.sqlite3')
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
+        #'NAME': '/Users/yeonwoong/Desktop/portfolio/swppfall2022-team14/backend/db/db.sqlite3'
         'NAME': BASE_DIR / '.db' / 'db.sqlite3',
+        
+        
         # 'NAME': BASE_DIR / 'db.sqlite3',
         # 'NAME': os.path.join(os.getcwd(),'db.sqlite3')
                 

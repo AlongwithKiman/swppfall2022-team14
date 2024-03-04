@@ -359,3 +359,95 @@ def get_init_cocktail(request):
     data = CocktailListSerializer(cocktails, many=True, context={
         'user': request.user}).data
     return JsonResponse({"cocktails": data, "count": cocktails.count()}, safe=False)
+
+
+
+
+
+
+import torch
+from cocktail.cocktailbert.kobert_for_classification import BERTClassification
+from kobert_tokenizer import KoBERTTokenizer
+from cocktail.cocktailbert.utils import postprocess_model
+
+
+tokenizer = KoBERTTokenizer.from_pretrained('skt/kobert-base-v1')
+#TODO: modify this root
+checkpoint_path = '/Users/yeonwoong/Desktop/portfolio/swppfall2022-team14/backend/qualla/cocktail/cocktailbert/model.ckpt'
+loaded_ckpt = torch.load(checkpoint_path)
+loaded_model={}
+for key, value in loaded_ckpt.items():
+    loaded_model[key] = value
+
+model = BERTClassification([4,5,5])
+model.load_state_dict(loaded_model, strict=False)
+model.eval()
+
+@api_view(['GET'])
+def get_ai_cocktail_recommend(request):
+
+    MAX_RECOMMEND_LEN = 5
+
+
+    text = request.query_params.get("text", None)
+    print(f"got param :{text}")
+    with torch.no_grad():
+        result = postprocess_model(model,text, tokenizer)
+    
+    size, abv, color = result["size"], result["abv"], result["color"]
+    
+    if size == 0:
+        size = None
+    elif size == 1:
+        size = '롱 드링크'
+    elif size == 2:
+        size = '숏 드링크'
+    elif size == 3:
+        size = '샷'
+    else:
+        raise ValueError("invalid size type")
+
+    if abv == 0:
+        abv = None
+    elif abv == 1:
+        abv = (0, 15)
+    elif abv == 2:
+        abv = (15, 30)
+    elif abv == 3:
+        abv = (30, 40)
+    elif abv == 4:
+        abv = (40, 100)
+    else:
+        raise ValueError("invalid abv type")
+
+
+    if color == 0:
+        color = None
+    elif color == 1:
+        color = "ff0000"
+    elif color == 2:
+        color = "00ff00"
+    elif color == 3:
+        color = "33ffff"
+    elif color == 4:
+        color = "da8c17"
+    elif color == 5:
+        color = "ffff00"
+    else:
+        raise ValueError("invalid abv type")
+
+    filter_q = Q()
+
+    if size is not None:
+        filter_q.add(Q(filter_type_two=size), Q.AND)
+    if abv is not None:
+        filter_q.add(Q(ABV__range=(abv)), Q.AND)
+    cocktails = Cocktail.objects.filter(filter_q)
+    if color is not None:
+        color_sort_id = [cocktail.id for cocktail in sorted(cocktails, key=lambda cocktail: color_similarity(
+            cocktail.color, color))]
+
+        cocktails = order_queryset_by_id(cocktails, color_sort_id)[:MAX_RECOMMEND_LEN]
+    data = CocktailListSerializer(cocktails, many=True, context={
+                                    'user': request.user}).data
+    return JsonResponse({"cocktails": data, "count": cocktails.count()}, safe=False)

@@ -47,3 +47,5 @@ jobs:
           AWS_DISTRIBUTION: ${{ secrets.AWS_DISTRIBUTION_ID }}
           PATHS: '/index.html'
         continue-on-error: true
+
+  # frontend deployment checking

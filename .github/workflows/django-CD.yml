@@ -51,8 +51,8 @@ jobs:
         id: deploy
         run: |
           aws deploy create-deployment \
-          --application-name TipsynightBackendDeploy \
-          --deployment-group-name TipsynightBackendDeployGroup \
+          --application-name autoDeployApplication \
+          --deployment-group-name autoDeployDeployGroup \
           --deployment-config-name CodeDeployDefault.OneAtATime \
           --file-exists-behavior OVERWRITE \
           --s3-location bucket=${{ secrets.DJANGO_AWS_BUCKET }},bundleType=zip,key=qualla-deploy.zip \

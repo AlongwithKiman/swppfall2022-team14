@@ -364,7 +364,7 @@ def get_init_cocktail(request):
 
 
 
-
+"""
 import torch
 from cocktail.cocktailbert.kobert_for_classification import BERTClassification
 from kobert_tokenizer import KoBERTTokenizer
@@ -451,3 +451,5 @@ def get_ai_cocktail_recommend(request):
     data = CocktailListSerializer(cocktails, many=True, context={
                                     'user': request.user}).data
     return JsonResponse({"cocktails": data, "count": cocktails.count()}, safe=False)
+
+    """

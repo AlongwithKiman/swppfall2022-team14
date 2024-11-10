@@ -11,5 +11,5 @@ urlpatterns = [
     path('<int:pk>/delete/', views.delete_cocktail, name='cocktail delete'),
     path('<int:pk>/rate/', views.cocktail_rate_edit, name='cocktail rate edit'),
     path('me/', views.retrieve_my_cocktail, name='retrieve my cocktails'),
-    path('ai_recommend/',views.get_ai_cocktail_recommend, name="get ai recommendation")
+    #path('ai_recommend/',views.get_ai_cocktail_recommend, name="get ai recommendation")
 ]

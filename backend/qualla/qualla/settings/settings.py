@@ -2,7 +2,7 @@ from .base import *
 
 DEBUG = True
 
-ALLOWED_HOSTS = ['','0.0.0.0','web','tipsybackend.shop','qualla.kro.kr',\
+ALLOWED_HOSTS = ['','0.0.0.0','web','tipsybackend.store','qualla.kro.kr',\
                  '3.39.189.88','ec2-3-39-189-88.ap-northeast-2.compute.amazonaws.com',
                  '3.34.194.217','ec2-3-34-194-217.ap-northeast-2.compute.amazonaws.com'
                  '13.209.77.169','ec2-13-209-77-169.ap-northeast-2.compute.amazonaws.com',\

@@ -98,5 +98,5 @@
       "!src/store/index.ts"
     ]
   },
-  "proxy": "https://tipsybackend.shop"
+  "proxy": "https://tipsybackend.store"
 }

@@ -23,78 +23,88 @@ from django.db.models import Case, When
 ## FILTER FUNCTIONS HERE ##
 
 
-def process_text_param(request, filter_q):
-    text = request.query_params.get("name_param", None)
+class CocktailFilter:
+    def __init__(self):
+        self.filter_q = Q()
+    
+    # Text 매칭필터
+    def process_text_param(self, request):
+        text = request.query_params.get("name_param", None)
 
-    if (text is not None and text != ""):
-        filter_q.add(Q(name__contains=text), Q.AND)
+        if (text is not None and text != ""):
+            self.filter_q.add(Q(name__contains=text), Q.AND) 
 
 
-def process_get_list_params(request, filter_q):
-    def get_ABV_range(request):
-        if request == "weak":
-            return (0, 15)
-        elif request == "medium":
-            return (15, 30)
-        elif request == "strong":
-            return (30, 40)
-        elif request == "extreme":
-            return (40, 100)
-        else:
-            raise ValueError("invalid ABV type")
+    # 칵테일 유형(클래식/트로피컬, 롱/숏, 도수) 필터
+    def process_get_list_params(self, request):
+        ABV_range_map = {"weak":(0, 15), "medium":(15, 30), "storng": (30, 40), "extreme": (40, 100)}
 
-    filter_type_one_list = request.query_params.getlist("type_one[]", None)
-    filter_type_two_list = request.query_params.getlist("type_two[]", None)
-    filter_type_ABV = request.query_params.getlist(
-        "type_three[]", None)  # 도수
+        filter_type_one_list = request.query_params.getlist("type_one[]", None)
+        filter_type_two_list = request.query_params.getlist("type_two[]", None)
+        filter_type_ABV = request.query_params.getlist(
+            "type_three[]", None)  # 도수
 
-    try:
-        assert (all([x in ['클래식', '트로피컬'] for x in filter_type_one_list]) and
-                all([x in ['롱 드링크', '숏 드링크', '샷'] for x in filter_type_two_list])), "Invalid Filter Type"
-    except AssertionError:
-        raise AssertionError
-
-    if filter_type_one_list is not None and len(filter_type_one_list) != 0:
-        filter_q.add(Q(filter_type_one__in=filter_type_one_list), Q.AND)
-
-    if filter_type_two_list is not None and len(filter_type_two_list) != 0:
-        filter_q.add(Q(filter_type_two__in=filter_type_two_list), Q.AND)
-
-    if len(filter_type_ABV) != 0:
         try:
-            abv_range = get_ABV_range(filter_type_ABV[0])
-        except (ValueError):
-            raise ValueError
-        filter_q.add(Q(ABV__range=(abv_range)), Q.AND)
+            assert (all([x in ['클래식', '트로피컬'] for x in filter_type_one_list]) and
+                    all([x in ['롱 드링크', '숏 드링크', '샷'] for x in filter_type_two_list])), "Invalid Filter Type"
+        except AssertionError:
+            raise AssertionError
 
+        if filter_type_one_list is not None and len(filter_type_one_list) != 0:
+            self.filter_q.add(Q(filter_type_one__in=filter_type_one_list), Q.AND)
 
-# user - store 정보 활용하여 내가 만들 수 있는 칵테일 필터
-def get_only_available_cocktails(request, filter_q):
-    if not request.user.is_authenticated:
-        raise AttributeError
-    user = request.user
-    store_ingredients = user.store.all()
+        if filter_type_two_list is not None and len(filter_type_two_list) != 0:
+            self.filter_q.add(Q(filter_type_two__in=filter_type_two_list), Q.AND)
 
-    # 내 재료 id list
-    my_ingredients = [
-        store_ingredient.ingredient.id for store_ingredient in store_ingredients]
+        if len(filter_type_ABV) != 0:
+            try:
+                abv_range = ABV_range_map(filter_type_ABV[0])
+            except (ValueError):
+                raise ValueError
+            self.filter_q.add(Q(ABV__range=(abv_range)), Q.AND)
+    
 
-    cocktail_all = Cocktail.objects.all()
-    available_cocktails_id = []
+    # user - store 정보 활용하여 내가 만들 수 있는 칵테일 필터
+    def get_only_available_cocktails(self, request):
+        if not request.user.is_authenticated:
+            raise AttributeError
+        user = request.user
+        store_ingredients = user.store.all()
 
-    for cocktail in cocktail_all:
-        ingredient_prepare = [
-            ingredient_prepare.ingredient.id for ingredient_prepare in cocktail.ingredient_prepare.all()]
+        # 내 재료 id list
+        my_ingredients = [
+            store_ingredient.ingredient.id for store_ingredient in store_ingredients]
 
-        # 만약 해당 칵테일 재료가 내 재료의 subset이면
-        if set(ingredient_prepare).issubset(set(my_ingredients)):
-            available_cocktails_id.append(cocktail.id)
+        cocktail_all = Cocktail.objects.all()
+        available_cocktails_id = []
 
-    # 매칭된 칵테일 없음 없음
-    if (not available_cocktails_id):
-        filter_q.add(Q(id__in=[-1]), Q.AND)
-    else:
-        filter_q.add(Q(id__in=available_cocktails_id), Q.AND)
+        for cocktail in cocktail_all:
+            ingredient_prepare = [
+                ingredient_prepare.ingredient.id for ingredient_prepare in cocktail.ingredient_prepare.all()]
+
+            # 만약 해당 칵테일 재료가 내 재료의 subset이면
+            if set(ingredient_prepare).issubset(set(my_ingredients)):
+                available_cocktails_id.append(cocktail.id)
+
+        # 매칭된 칵테일 없음
+        if (not available_cocktails_id):
+            self.filter_q.add(Q(id__in=[-1]), Q.AND)
+        else:
+            self.filter_q.add(Q(id__in=available_cocktails_id), Q.AND)
+    
+
+    # standard / custom 필터
+    def process_st_or_cs_param(self, request):
+        _type = request.GET.get('type')
+        if _type == 'standard':
+            self.filter_q.add(Q(type='ST'), Q.AND)
+            #filter_q.add(Q(type='ST'), Q.AND)
+        elif _type == 'custom':
+            self.cocktailfilter.add(Q(type='CS'), Q.AND)
+            #filter_q.add(Q(type='CS'), Q.AND)
+        else:
+            return HttpResponseBadRequest('Cocktail type is \'custom\' or \'standard\'')
+
 
 
 ## END FILTER FUNCTIONS ##
@@ -105,36 +115,38 @@ def get_only_available_cocktails(request, filter_q):
 def cocktail_list(request):
     if request.method == 'GET':
 
-        filter_q = Q()
+        cocktailfilter = CocktailFilter()
+       
 
-        # Add params Filter
+       # apply get_list filter
         try:
-            process_get_list_params(request, filter_q)
+            cocktailfilter.process_get_list_params(request)
         except (ValueError, AssertionError) as e:
             return HttpResponseBadRequest('Invalid ABV or Filter Type', e)
 
-        # Add ingredient filter : 나중에 재료만으로 검색 기능 추가시 활용.
-        # get_cocktail_list_by_ingredient(request, filter_q)
 
-        # Add text filter
-        process_text_param(request, filter_q)
+        # apply text filter        
+        cocktailfilter.process_text_param(request)
 
+        # apply "available_only" filter
         if request.query_params.get("available_only", None) == 'true':
             try:
-                get_only_available_cocktails(request, filter_q)
+                cocktailfilter.get_only_available_cocktails(request)
+                #get_only_available_cocktails(request, filter_q)
             except AttributeError:
                 return HttpResponse(status=401)
 
-        # Add Type Filter
-        type = request.GET.get('type')
-        if type == 'standard':
-            filter_q.add(Q(type='ST'), Q.AND)
-        elif type == 'custom':
-            filter_q.add(Q(type='CS'), Q.AND)
-        else:
+
+        # apply standard or custom filter
+        try:
+            cocktailfilter.process_st_or_cs_param(request)
+        except HttpResponseBadRequest:
             return HttpResponseBadRequest('Cocktail type is \'custom\' or \'standard\'')
 
-        cocktails = Cocktail.objects.filter(filter_q)
+
+        cocktails = Cocktail.objects.filter(cocktailfilter.filter_q)
+        
+        
         # calculate color similarity locally if needed
         filter_color = request.query_params.get("color")
         if filter_color is not None:

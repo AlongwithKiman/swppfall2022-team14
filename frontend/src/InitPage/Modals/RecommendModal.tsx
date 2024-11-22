@@ -154,7 +154,7 @@ const RecommendModal = (props: prop) => {
                                                 },
                                             })}
                                         >
-                                            이것만 있으면!
+                                            이것만 있으면 만들 수 있어요!
                                         </Typography>
                                         {ingredientState.availableCocktails
                                             .find(info => info.ingredient_id === ingredient.id)?.cocktails

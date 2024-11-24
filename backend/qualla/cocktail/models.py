@@ -41,6 +41,10 @@ class Cocktail(models.Model):
                 name='custom cocktail should have author'
             )
         ]
+        indexes = [
+            models.Index(fields=['filter_type_one']),
+            models.Index(fields=['ABV']),
+        ]
 
     def __str__(self):
         return "{} ({})".format(self.name, self.id)

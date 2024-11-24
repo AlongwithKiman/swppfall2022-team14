@@ -38,26 +38,11 @@ def cocktail_list(request):
         
         filter_q = Q()
 
-        err = TypeFilter().apply(request, filter_q)
-        if err:
-            raise err
-        
-        err = ABVFilter().apply(request, filter_q)
-        if err:
-            raise err
-
-        err = SizeFilter().apply(request, filter_q)
-        if err:
-            raise err
-
-        err = AvailableFilter().apply(request, filter_q)
-        if err:
-            raise err
-
-        err = StandardOrCustomFilter().apply(request, filter_q)
-        if err:
-            raise err
-
+        for Filter in [ABVFilter, TypeFilter, SizeFilter, StandardOrCustomFilter, AvailableFilter]:
+            err = Filter().apply(request, filter_q)
+            if err:
+                raise err
+            
         cocktails = Cocktail.objects.filter(filter_q)
 
         # calculate color similarity locally if needed

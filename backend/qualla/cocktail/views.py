@@ -33,6 +33,10 @@ def cocktail_list(request):
         if err:
             raise err
         
+        err = ABVFilter().apply(request, filter_q)
+        if err:
+            raise err
+
         err = SizeFilter().apply(request, filter_q)
         if err:
             raise err

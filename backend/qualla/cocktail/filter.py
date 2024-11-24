@@ -23,7 +23,7 @@ class TextFilter(BaseFilter):
 
 class ABVFilter(BaseFilter):
     def __init__(self):
-        self.ABV_range_map = {"weak":(0, 15), "medium":(15, 30), "storng": (30, 40), "extreme": (40, 100)}
+        self.ABV_range_map = {"weak":(0, 15), "medium":(15, 30), "strong": (30, 40), "extreme": (40, 100)}
     
     def apply(self, request, filter_q):
         filter_type_ABV = request.query_params.getlist(

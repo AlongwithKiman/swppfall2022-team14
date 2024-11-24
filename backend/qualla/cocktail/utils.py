@@ -1,6 +1,6 @@
 import numpy as np
 from django.db.models import Case, When
-
+import hashlib
 
 def rgb2lab(inputColor):
 
@@ -79,5 +79,7 @@ def order_queryset_by_id(qs, id_list):
 
 def get_cache_key_by_request(request):
     is_available = request.query_params.get("available_only", None) == 'true'
-    return f"cocktail_list_{request.user.id if is_available else 'global'}_" \
+    _key = f"cocktail_list_{request.user.id if is_available else 'global'}_" \
                     f"{'_'.join([f'{key}={value}' for key, value in request.GET.items()])}"
+
+    return hashlib.md5(_key.encode('utf-8')).hexdigest()

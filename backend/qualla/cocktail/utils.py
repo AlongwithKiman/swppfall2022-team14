@@ -76,3 +76,8 @@ def order_queryset_by_id(qs, id_list):
                        for pos, pk in enumerate(id_list)])
     qs = qs.order_by(preserved)
     return qs
+
+def get_cache_key_by_request(request):
+    is_available = request.query_params.get("available_only", None) == 'true'
+    return f"cocktail_list_{request.user.id if is_available else 'global'}_" \
+                    f"{'_'.join([f'{key}={value}' for key, value in request.GET.items()])}"

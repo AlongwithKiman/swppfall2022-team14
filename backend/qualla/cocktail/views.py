@@ -13,10 +13,10 @@ from .models import Cocktail
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework import permissions, authentication
 from .serializers import CocktailDetailSerializer, CocktailListSerializer, CocktailPostSerializer
-from .utils import color_similarity, order_queryset_by_id
+from .utils import color_similarity, order_queryset_by_id, get_cache_key_by_request
 from django.db.models import Case, When
 from .filter import ABVFilter, TypeFilter, SizeFilter, AvailableFilter, StandardOrCustomFilter, ColorSorter
-
+from django.core.cache import cache
 
 
 ## END FILTER FUNCTIONS ##
@@ -26,7 +26,14 @@ from .filter import ABVFilter, TypeFilter, SizeFilter, AvailableFilter, Standard
 @permission_classes([AvailableCocktailPermission])
 def cocktail_list(request):
     if request.method == 'GET':
+        
+        # Caching key
+        cache_key = get_cache_key_by_request(request)
+        cached_response = cache.get(cache_key)
+        if cached_response:
+            return JsonResponse(cached_response, safe=False)
 
+        
         filter_q = Q()
 
         err = TypeFilter().apply(request, filter_q)
@@ -58,7 +65,12 @@ def cocktail_list(request):
 
         data = CocktailListSerializer(cocktails, many=True, context={
                                       'user': request.user}).data
-        return JsonResponse({"cocktails": data, "count": cocktails.count()}, safe=False)
+
+        response_data = {"cocktails": data, "count": cocktails.count()}
+
+        cache.set(cache_key, response_data, timeout=300)  # 5분
+        
+        return JsonResponse(response_data, safe=False)
 
 
 @api_view(['POST'])
@@ -76,11 +88,9 @@ def cocktail_post(request):
         # TODO: change fields that is derived automatically
         #data['author_id'] = 1
         data['type'] = 'CS'
-        print(data)
 
         serializer = CocktailPostSerializer(
             data=data, context={"request": request})
-        print(serializer.initial_data["name_eng"])
 
         if not serializer.is_valid():
             err = serializer.errors
@@ -99,7 +109,6 @@ def cocktail_post(request):
                 return ExceptionResponse(status=400, detail="intro_blank", code=ErrorCode.COCKTAIL_INTRO_BLANK).to_response()
             elif first_err == 'recipe':
                 return ExceptionResponse(status=400, detail="recipe_blank", code=ErrorCode.COCKTAIL_RECIPE_BLANK).to_response()
-        print(serializer.errors)
         cocktail = serializer.save()
         try:
             tags = data['tags']

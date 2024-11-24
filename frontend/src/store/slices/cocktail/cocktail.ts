@@ -94,6 +94,7 @@ export interface FilterParamType {
 export const fetchStandardCocktailList = createAsyncThunk(
     "cocktail/fetchStandardCocktailList", async (data: { params: FilterParamType | null, token: string | null }) => {
         if (!data.params) {
+            console.log("init called")
             const response = await axios.get(`/api/v1/cocktails/init/?type=standard`,
                 {
                     headers: (data.token) ? {

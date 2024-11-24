@@ -13,7 +13,8 @@ from .models import Cocktail
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework import permissions, authentication
 from .serializers import CocktailDetailSerializer, CocktailListSerializer, CocktailPostSerializer
-from .utils import color_similarity, order_queryset_by_id, get_cache_key_by_request
+from .utils import color_similarity, order_queryset_by_id
+from .cache import get_cache_key_by_request
 from django.db.models import Case, When
 from .filter import ABVFilter, TypeFilter, SizeFilter, AvailableFilter, StandardOrCustomFilter, ColorSorter
 from django.core.cache import cache
@@ -31,6 +32,7 @@ def cocktail_list(request):
         cache_key = get_cache_key_by_request(request)
         cached_response = cache.get(cache_key)
         if cached_response:
+            print("cached!")
             return JsonResponse(cached_response, safe=False)
 
         
@@ -139,6 +141,7 @@ def cocktail_post(request):
             IngredientPrepare.objects.create(
                 cocktail=cocktail, ingredient=_ingredient, amount=ingredient["amount"], unit=ingredient["unit"])
 
+        cache.clear()
         return JsonResponse(CocktailDetailSerializer(cocktail, context={'user': request.user}).data, status=201)
     # else:
     #     return HttpResponseNotAllowed(['GET', 'POST'])
@@ -202,6 +205,8 @@ def cocktail_edit(request, pk):
             return HttpResponseNotFound("ingredient does not exist")
         IngredientPrepare.objects.create(
             cocktail=cocktail, ingredient=_ingredient, amount=ingredient["amount"], unit=ingredient["unit"])
+    
+    cache.clear()
     return JsonResponse(data=CocktailDetailSerializer(cocktail, context={'user': request.user}).data, status=200)
 
 
@@ -260,6 +265,7 @@ def delete_cocktail(request, pk):
         return HttpResponse(status=401)
     # TODO: author_id=request.user.id
     cocktail.delete()
+    cache.clear()
     return HttpResponse(status=204)
 
 

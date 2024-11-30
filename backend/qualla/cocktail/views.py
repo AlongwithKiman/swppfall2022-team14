@@ -16,7 +16,7 @@ from .serializers import CocktailDetailSerializer, CocktailListSerializer, Cockt
 from .utils import color_similarity, order_queryset_by_id
 from .cache import get_cache_key_by_request
 from django.db.models import Case, When
-from .filter import ABVFilter, TypeFilter, SizeFilter, AvailableFilter, StandardOrCustomFilter, ColorSorter
+from .filter import TextFilter, ABVFilter, TypeFilter, SizeFilter, AvailableFilter, StandardOrCustomFilter, ColorSorter
 from django.core.cache import cache
 
 
@@ -38,10 +38,10 @@ def cocktail_list(request):
         
         filter_q = Q()
 
-        for Filter in [ABVFilter, TypeFilter, SizeFilter, StandardOrCustomFilter, AvailableFilter]:
+        for Filter in [TextFilter, ABVFilter, TypeFilter, SizeFilter, StandardOrCustomFilter, AvailableFilter]:
             err = Filter().apply(request, filter_q)
             if err:
-                raise err
+                return JsonResponse(err, status = 400)
             
         cocktails = Cocktail.objects.filter(filter_q)
 

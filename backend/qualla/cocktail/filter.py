@@ -1,13 +1,14 @@
+from abc import ABCMeta, abstractmethod
 from django.db.models import Q
 from django.http import HttpResponseBadRequest, HttpResponseNotAllowed, HttpResponseNotFound, JsonResponse, HttpResponse
 from .models import Cocktail
 from .utils import color_similarity, order_queryset_by_id
 
 # request와 filter_q를 받아 filter_q에 필터 조건을 추가
-class BaseFilter:
+class BaseFilter(metaclass = ABCMeta):
     def __init__(self):
         pass
-
+    @abstractmethod
     def apply(self, request, filter_q):
         pass
         # if error occurs, it should return that error
@@ -32,19 +33,17 @@ class ABVFilter(BaseFilter):
             try:
                 abv_range = self.ABV_range_map[filter_type_ABV[0]]
                 filter_q.add(Q(ABV__range=(abv_range)), Q.AND)
-            except (ValueError):
-                return HttpResponseBadRequest('Invalid ABV Type', ValueError)
+            except (KeyError):
+                return {"error": "Invalid ABV Type"}
 
 
 class TypeFilter(BaseFilter):
-
-    
     def apply(self, request, filter_q):
         filter_type_one_list = request.query_params.getlist("type_one[]", None)  # 클래식 / 트로피컬
         try:
             assert (all([x in ['클래식', '트로피컬'] for x in filter_type_one_list])), "Invalid Filter Type"
         except AssertionError:
-            return HttpResponseBadRequest('Invalid Filter Type(Classic or Tropical)', AssertionError)
+            return  {"error": "Invalid Filter Type(Classic or Tropical)"} 
 
         if filter_type_one_list is not None and len(filter_type_one_list) != 0:
             filter_q.add(Q(filter_type_one__in=filter_type_one_list), Q.AND)
@@ -57,7 +56,7 @@ class SizeFilter(BaseFilter):
         try:
             assert (all([x in ['롱 드링크', '숏 드링크', '샷'] for x in filter_type_two_list])), "Invalid Filter Type(Size)"
         except AssertionError:
-            return HttpResponseBadRequest('Invalid Filter Type(Size)', AssertionError)
+            return {"error": "Invalid Filter Type(size)"}
 
         if filter_type_two_list is not None and len(filter_type_two_list) != 0:
             filter_q.add(Q(filter_type_two__in=filter_type_two_list), Q.AND)
@@ -70,7 +69,7 @@ class AvailableFilter(BaseFilter):
 
 
         if not request.user.is_authenticated:
-            return AttributeError
+            return {"error": "user not authenticated"}
 
         user = request.user
         store_ingredients = user.store.all()
@@ -108,7 +107,7 @@ class StandardOrCustomFilter(BaseFilter):
             filter_q.add(Q(type='CS'), Q.AND)
             #filter_q.add(Q(type='CS'), Q.AND)
         else:
-            return HttpResponseBadRequest('Cocktail type is \'custom\' or \'standard\'')
+            return {"error": "Cocktail type is \'custom\' or \'standard\'"}
 
 
 class ColorSorter:

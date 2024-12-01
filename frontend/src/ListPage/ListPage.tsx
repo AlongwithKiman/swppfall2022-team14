@@ -73,6 +73,7 @@ const ListPage = () => {
     const location = useLocation()
     const [filterParam, setFilterParam] = useState<FilterParamType | null>(null)
 
+    
     const pageStatus = type === 'ingredient' ? ingrState.listStatus : cocktailState.listStatus
 
     useEffect(() => {
@@ -98,7 +99,7 @@ const ListPage = () => {
             dispatch(fetchIngredientList(search))
         }
 
-    }, [])
+    }, [type, location.state])
 
 
     useEffect(() => {

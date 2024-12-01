@@ -92,7 +92,7 @@ const MainPage = () => {
                 onClick={onClickMain}
             >
                 <Routes>
-                    <Route path="/:type" element={<ListPage />} />
+                    <Route path="/:type" element={<ListPage /> } key={window.location.pathname} />
                     <Route path="/custom/:id/edit" element={<EditCustomPage />} />
                     <Route path='/custom/create' element={<CreateCustomPage />} />
                     <Route path="/ingredient/:id" element={<IngredientDetailPage />} />

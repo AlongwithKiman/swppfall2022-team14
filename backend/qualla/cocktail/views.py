@@ -20,42 +20,69 @@ from .filter import TextFilter, ABVFilter, TypeFilter, SizeFilter, AvailableFilt
 from django.core.cache import cache
 
 
-## END FILTER FUNCTIONS ##
-
 @api_view(['GET'])
 @authentication_classes([authentication.TokenAuthentication])
 @permission_classes([AvailableCocktailPermission])
 def cocktail_list(request):
     if request.method == 'GET':
         
-        # Caching key
-        cache_key = get_cache_key_by_request(request)
-        cached_response = cache.get(cache_key)
-        if cached_response:
-            print("cached!")
-            return JsonResponse(cached_response, safe=False)
+        # is_available = false 이면 모든 cocktail 객체를 load
+        # is_available = true 이면 유저가 만들 수 있는 전체 칵테일 객체를 load
+        all_cocktails = None
+        filters = [TextFilter, ABVFilter, TypeFilter, SizeFilter, StandardOrCustomFilter]
 
+        is_available, cache_key = get_cache_key_by_request(request)
+        
+        # "만들 수 있는 칵테일만" option on
+        if is_available and request.user.is_authenticated:      
+            cached_response = cache.get(cache_key)
+            if cached_response:
+                all_cocktails = cached_response
+                all_cocktails.pk = None
+                print("cached user!")
+            else:
+                available_filter_q = Q()
+                AvailableFilter().apply(request, available_filter_q)
+                all_cocktails = Cocktail.objects.filter(available_filter_q)
+                
+                # is_available 시 유저가 만들 수 있는 전체 칵테일 객체를 caching
+                cache.set(cache_key, all_cocktails, timeout=300)  # 5분
+        else:
+            cached_response = cache.get(cache_key)
+            if cached_response:
+                print("cached!")
+                return JsonResponse(cached_response, safe=False)
+
+            else:
+                all_cocktails = Cocktail.objects.all()
+            
         
         filter_q = Q()
-
-        for Filter in [TextFilter, ABVFilter, TypeFilter, SizeFilter, StandardOrCustomFilter, AvailableFilter]:
+        for Filter in filters:
             err = Filter().apply(request, filter_q)
             if err:
                 return JsonResponse(err, status = 400)
+                
             
-        cocktails = Cocktail.objects.filter(filter_q)
+            
+        #filter cocktails by filter
+        cocktails = all_cocktails.filter(filter_q)
 
         # calculate color similarity locally if needed
         cocktails = ColorSorter().sort(request, cocktails)
 
 
 
+        # constructing response data
         data = CocktailListSerializer(cocktails, many=True, context={
-                                      'user': request.user}).data
+                                    'user': request.user}).data
 
         response_data = {"cocktails": data, "count": cocktails.count()}
 
-        cache.set(cache_key, response_data, timeout=300)  # 5분
+
+        # not is_available 시 response data를 caching
+        if not is_available:
+            cache.set(cache_key, response_data, timeout=300)  # 5분
         
         return JsonResponse(response_data, safe=False)
 
